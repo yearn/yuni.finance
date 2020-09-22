@@ -218,13 +218,139 @@ class Store {
   }
 
   signDelegate = async (payload) => {
+    const { delegatee } = payload.content
+    const account = store.getStore('account')
+    const web3 = await this._getWeb3Provider();
+    if(!web3) return
 
-    return emitter.emit(SIGN_DELEGATE_RETURNED)
+    this._signDelegateBySig(web3, account, delegatee, (err, result) => {
+      if(err) {
+        return emitter.emit(ERROR, err)
+      }
+
+      return emitter.emit(SIGN_DELEGATE_RETURNED, result)
+    })
   }
 
+  _signDelegateBySig = async (web3, account, delegatee, callback) => {
+    const domain = [
+      { name: "name", type: "string" },
+      { name: "chainId", type: "uint256" },
+      { name: "verifyingContract", type: "address" }
+    ];
+
+    const delegation = [
+      { name: 'delegatee', type: 'address' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'expiry', type: 'uint256' }
+    ];
+
+    const chainId = web3.currentProvider.networkVersion;
+
+    const domainData = {
+      name: "Uniswap",
+      version: "1",
+      chainId: chainId,
+      verifyingContract: config.uniswapContractAddress
+    };
+
+    const nonce = await web3.eth.getTransactionCount(account.address);
+    const expiry = 10e9; // expiration of signature, in seconds since unix epoch
+    var message = {
+      delegatee: delegatee.address,
+      nonce: nonce,
+      expiry: expiry
+    };
+
+    const data = JSON.stringify({
+      types: {
+        EIP712Domain: domain,
+        Delegation: delegation
+      },
+      domain: domainData,
+      primaryType: "Delegation",
+      message: message
+    });
+
+    const signer = web3.utils.toChecksumAddress(account.address);
+
+    const that = this
+
+    web3.currentProvider.sendAsync(
+      {
+        method: "eth_signTypedData_v3",
+        params: [signer, data],
+        from: signer
+      },
+      function(err, result) {
+        if (err || result.error) {
+          return console.error(result);
+        }
+
+        const signature = that._parseSignature(result.result.substring(2));
+
+        const returnObj = {
+          signer: signer,
+          message: message,
+          r: signature.r,
+          s: signature.s,
+          v: signature.v
+        }
+
+        callback(null, returnObj)
+      }
+    );
+  }
+
+  _parseSignature = (signature) => {
+    var r = signature.substring(0, 64);
+    var s = signature.substring(64, 128);
+    var v = signature.substring(128, 130);
+
+    return {
+        r: "0x" + r,
+        s: "0x" + s,
+        v: parseInt(v, 16)
+    }
+  }
   saveDelegate = async (payload) => {
 
-    return emitter.emit(SAVE_DELEGATE_RETURNED)
+    const { signature } = payload.content
+    var requestOpts = {
+        uri: config.apiURL+'/api/v1/saveSignature',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Basic ' + config.apiToken,
+        },
+        body: JSON.stringify({
+          signer: signature.signer,
+          message: signature.message,
+          r: signature.r,
+          s: signature.s,
+          v: signature.v
+        })
+    };
+
+    console.log(requestOpts)
+
+    rp(requestOpts)
+    .then(function(res) {
+      try {
+        const json = JSON.parse(res)
+        if(json.status === 200) {
+          return emitter.emit(SAVE_DELEGATE_RETURNED, json)
+        } else {
+          return emitter.emit(ERROR, res)
+        }
+      } catch(ex) {
+        return emitter.emit(ERROR, ex)
+      }
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+
   }
 
   _getWeb3Provider = async () => {

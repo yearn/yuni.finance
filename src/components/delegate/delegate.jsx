@@ -2,10 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 import {
-  Card,
   Typography,
-  TextField,
-  Button
 } from '@material-ui/core';
 import Delegatee from './delegatee.jsx'
 
@@ -17,7 +14,9 @@ import {
   GET_BALANCE,
   BALANCE_RETURNED,
   GET_DELEGATEE_BALANCE,
-  DELEGATEE_BALANCE_RETURNED
+  DELEGATEE_BALANCE_RETURNED,
+  SIGN_DELEGATE_RETURNED,
+  SAVE_DELEGATE_RETURNED
 } from '../../constants'
 
 import Snackbar from '../snackbar'
@@ -119,6 +118,8 @@ class Delegate extends Component {
     emitter.on(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.on(CONNECTION_DISCONNECTED, this.connectionDisconnected);
     emitter.on(DELEGATE_RETURNED, this.showHash);
+    emitter.on(SIGN_DELEGATE_RETURNED, this.signDelegateReturned);
+    emitter.on(SAVE_DELEGATE_RETURNED, this.saveDelegateReturned);
     emitter.on(ERROR, this.errorReturned);
     emitter.on(BALANCE_RETURNED, this.balanceReturned);
     emitter.on(DELEGATEE_BALANCE_RETURNED, this.delegateeBalanceReturned);
@@ -128,6 +129,8 @@ class Delegate extends Component {
     emitter.removeListener(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.removeListener(CONNECTION_DISCONNECTED, this.connectionDisconnected);
     emitter.removeListener(DELEGATE_RETURNED, this.showHash);
+    emitter.removeListener(SIGN_DELEGATE_RETURNED, this.signDelegateReturned);
+    emitter.removeListener(SAVE_DELEGATE_RETURNED, this.saveDelegateReturned);
     emitter.removeListener(ERROR, this.errorReturned);
     emitter.removeListener(BALANCE_RETURNED, this.balanceReturned);
     emitter.removeListener(DELEGATEE_BALANCE_RETURNED, this.delegateeBalanceReturned);
@@ -153,6 +156,21 @@ class Delegate extends Component {
 
   delegateeBalanceReturned = () => {
     this.setState({ delegatees: store.getStore('delegatees') })
+  }
+
+  signDelegateReturned = () => {
+    this.setState({ loading: false })
+  }
+
+  saveDelegateReturned = (result) => {
+    const snackbarObj = { snackbarMessage: null, snackbarType: null }
+    this.setState(snackbarObj)
+    this.setState({ loading: false })
+    const that = this
+    setTimeout(() => {
+      const snackbarObj = { snackbarMessage: 'Signature submitted', snackbarType: 'Success' }
+      that.setState(snackbarObj)
+    })
   }
 
   errorReturned = (error) => {
@@ -236,12 +254,10 @@ class Delegate extends Component {
 
   rederDelegatees = () => {
     const { delegatees, uniBalances } = this.state
-    const { classes } = this.props
-    const width = window.innerWidth
 
     return delegatees.map((delegatee) => {
       return (
-        <Delegatee delegatee={ delegatee } startLoading={ this.startLoading } stopLoading={ this.stopLoading } uniBalances={ uniBalances } />
+        <Delegatee key={ delegatee.address } delegatee={ delegatee } startLoading={ this.startLoading } stopLoading={ this.stopLoading } uniBalances={ uniBalances } />
       )
     })
   };

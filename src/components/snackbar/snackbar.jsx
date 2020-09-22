@@ -95,7 +95,7 @@ class MySnackbar extends Component {
 
   render() {
 
-    const { type, message, t } = this.props
+    const { type, message } = this.props
 
     let icon = <SuccessIcon color={colors.blue} />
     let color = colors.blue

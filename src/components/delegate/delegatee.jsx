@@ -125,6 +125,10 @@ const styles = theme => ({
   },
   goalNumber: {
     minWidth: '150px'
+  },
+  json: {
+    width: '100%',
+    marginTop: '40px',
   }
 });
 
@@ -135,8 +139,8 @@ class Delegatee extends Component {
 
     this.state = {
       account: store.getStore('account'),
-      signature: null,
-      loading: false
+      loading: false,
+      signatureResponse: null
     }
   }
 
@@ -159,13 +163,13 @@ class Delegatee extends Component {
     this.props.stopLoading()
   };
 
-  signReturned = () => {
-    this.setState({ loading: false })
+  signReturned = (res) => {
+    this.setState({ loading: false, signatureResponse: res })
     this.props.stopLoading()
   };
 
   saveReturned = (txHash) => {
-    this.setState({ loading: false })
+    this.setState({ loading: false, signatureResponse: null })
     this.props.stopLoading()
   };
 
@@ -176,9 +180,9 @@ class Delegatee extends Component {
 
   render() {
     const { classes, delegatee, uniBalances } = this.props;
-    const { loading, signature } = this.state
+    const { loading, signatureResponse } = this.state
 
-    const percent = delegatee.totalDelegated/24000000
+    const percent = delegatee.totalDelegated/400000
 
     let alreadyDelegated = false
     if( uniBalances.delegatedAddress && uniBalances.delegatedAddress.toLowerCase() === delegatee.address.toLowerCase() ) {
@@ -221,12 +225,12 @@ class Delegatee extends Component {
         </div>
         <div className={ classes.description }>
           { alreadyDelegated && <Typography variant={ 'h5'} >You have already delegated to { delegatee.name }. Thanks for showing your support!</Typography> }
-          { !alreadyDelegated && <Typography variant='h5'>You can delegate to { delegatee.name } { delegatee.surname } on-chain. By clicking the button below, you will be calling the uniswap contract found <a href={ 'https://etherscan.io/address/'+config.uniswapContractAddress+'#writeContract' } target='_blank'>here</a> delegate() function. This will delegate your UNI to { delegatee.name }'s <a href={'https://etherscan.io/address/'+delegatee.address} target='_blank'>address</a>.</Typography> }
+          { !alreadyDelegated && <Typography variant='h5'>You can delegate to { delegatee.name } { delegatee.surname } on-chain. By clicking the button below, you will be calling the uniswap contract found <a href={ 'https://etherscan.io/address/'+config.uniswapContractAddress+'#writeContract' } target='_blank' rel='noopener noreferrer'>here</a> delegate() function. This will delegate your UNI to { delegatee.name }'s <a href={'https://etherscan.io/address/'+delegatee.address} target='_blank'  rel='noopener noreferrer'>address</a>.</Typography> }
         </div>
         <div className={ classes.action }>
           { !alreadyDelegated &&
             <Button
-              disabled={ loading || alreadyDelegated }
+              disabled={ loading }
               onClick={ this.onDelegate }
               fullWidth
               className={ classes.uniButton }
@@ -236,6 +240,49 @@ class Delegatee extends Component {
             </Button>
           }
         </div>
+        { (!alreadyDelegated && !signatureResponse) &&
+          <React.Fragment>
+            <div className={ classes.description }>
+              <Typography variant='h5'>If you don't want to spend the gas fees, { delegatee.name } will submit the transaction on-chain on your behalf. By clicking the button below, you will be signing the transaction on the uniswap contract found <a href={ 'https://etherscan.io/address/'+config.uniswapContractAddress+'#writeContract' } target='_blank' rel='noopener noreferrer'>here</a> delegateBySig(). This will be sent to { delegatee.name } to submit on your behalf.</Typography>
+            </div>
+            <div className={ classes.action }>
+              <Button
+                disabled={ loading }
+                onClick={ this.onSign }
+                fullWidth
+                className={ classes.uniButton }
+                variant='contained'
+                color='primary'>
+                <Typography className={ classes.buttonText } variant={ 'h5'} >Sign delegateBySig transaction</Typography>
+              </Button>
+            </div>
+          </React.Fragment>
+        }
+        { signatureResponse &&
+          <TextField
+            className={ classes.json }
+            id="outlined-textarea"
+            multiline
+            variant="outlined"
+            fullWidth
+            value={ JSON.stringify(signatureResponse, null, 2) }
+          />
+        }
+        { (!alreadyDelegated && signatureResponse) &&
+          <React.Fragment>
+            <div className={ classes.action }>
+              <Button
+                disabled={ loading }
+                onClick={ this.onSave }
+                fullWidth
+                className={ classes.uniButton }
+                variant='contained'
+                color='primary'>
+                <Typography className={ classes.buttonText } variant={ 'h5'} >Send signature to { delegatee.name }</Typography>
+              </Button>
+            </div>
+          </React.Fragment>
+        }
       </div>
     )
   };
@@ -275,12 +322,13 @@ class Delegatee extends Component {
   }
 
   onSave = () => {
-    const { delegatee, startLoading  } = this.props
+    const { delegatee, startLoading } = this.props
+    const { signatureResponse } = this.state
 
     this.setState({ loading: true })
     startLoading()
 
-    dispatcher.dispatch({ type: SAVE_DELEGATE, content: { delegatee } })
+    dispatcher.dispatch({ type: SAVE_DELEGATE, content: { delegatee, signature: signatureResponse } })
   }
 }
 

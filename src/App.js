@@ -25,6 +25,7 @@ class App extends Component {
   state = {};
 
   componentWillMount() {
+    console.log(process.env)
     injected.isAuthorized().then(isAuthorized => {
       if (isAuthorized) {
         injected.activate()
