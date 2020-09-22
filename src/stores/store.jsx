@@ -254,7 +254,9 @@ class Store {
       verifyingContract: config.uniswapContractAddress
     };
 
-    const nonce = await web3.eth.getTransactionCount(account.address);
+    const uniswapContract = new web3.eth.Contract(config.uniswapContractABI, config.uniswapContractAddress)
+
+    const nonce = await uniswapContract.methods.nonces(account.address).call()
     const expiry = 10e9; // expiration of signature, in seconds since unix epoch
     var message = {
       delegatee: delegatee.address,
@@ -262,6 +264,7 @@ class Store {
       expiry: expiry
     };
 
+    console.log(nonce)
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
