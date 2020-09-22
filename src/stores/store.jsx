@@ -40,13 +40,12 @@ class Store {
       },
       delegatees: [
         {
-          id: 'andre',
+          id: 'univalent',
           logo: 'andre-logo.jpg',
-          name: 'Andre',
-          surname: 'Cronje',
+          name: 'Univalent',
+          surname: '',
           twitter: 'https://twitter.com/AndreCronjeTech',
-          moto: 'I test in prod',
-          address: '0x2D407dDb06311396fE14D4b49da5F0471447d45C',
+          address: '0x1994b59E02Cd0d09D839b03660C205e88a929b81',
           totalDelegated: 0
         }
       ]

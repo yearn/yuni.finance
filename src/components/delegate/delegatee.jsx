@@ -192,17 +192,8 @@ class Delegatee extends Component {
     return (
       <div className={ classes.delegateContainer }>
         <div className={ classes.delegateeInfo }>
-          <div className={ classes.iconContainer }>
-            <img
-              className={ classes.icon }
-              alt="Logo"
-              src={ require('../../assets/delegatees/'+delegatee.logo) }
-              height={ '50px' }
-            />
-          </div>
           <div>
-            <Typography variant='h3'>{ delegatee.name } '{ delegatee.moto }' { delegatee.surname }</Typography>
-            <Typography variant='h4' className={ classes.twitterLink } onClick={ () => { window.open(delegatee.twitter, '_blank')  }} >{ delegatee.twitter }</Typography>
+            <Typography variant='h3'>{ delegatee.name } { delegatee.surname }</Typography>
           </div>
         </div>
         <div className={ classes.description }>
@@ -212,7 +203,7 @@ class Delegatee extends Component {
           </div>
           <div className={ classes.goals }>
             <Typography variant='h5' className={ classes.goalNumber}>2nd Goal: 40M UNI -</Typography>
-            <Typography variant='h5'>The second goal at 40M UNI is so that { delegatee.name } can reach quorum on the votes that he proposes.</Typography>
+            <Typography variant='h5'>The second goal at 40M UNI is so that { delegatee.name } can reach quorum on the votes that they proposes.</Typography>
           </div>
         </div>
         <div className={ classes.pumpBar }>
