@@ -70,7 +70,17 @@ const styles = theme => ({
     marginRight: '24px'
   },
   title: {
-    flex: 1
+    flex: 1,
+    [theme.breakpoints.down('sm')]: {
+      display: 'none'
+    }
+  },
+  titleReplacement: {
+    display: 'none',
+    [theme.breakpoints.down('sm')]: {
+      flex: 1,
+      display: 'block'
+    }
   },
   walletAddress: {
     padding: '12px',
@@ -220,6 +230,7 @@ class Delegate extends Component {
             height={ '40px' }
           />
           <Typography variant='h3' className={ classes.title }>yuni.finance</Typography>
+          <div className={ classes.titleReplacement }></div>
           { address &&
             <div className={ classes.uniBalance }>
               <Typography variant={ 'h4'}>{ (uniBalances && uniBalances.balance) ? uniBalances.balance.toFixed(0) +' UNI' : '0 UNI' }</Typography>
@@ -253,11 +264,11 @@ class Delegate extends Component {
   };
 
   rederDelegatees = () => {
-    const { delegatees, uniBalances } = this.state
+    const { delegatees, uniBalances, account } = this.state
 
     return delegatees.map((delegatee) => {
       return (
-        <Delegatee key={ delegatee.address } delegatee={ delegatee } startLoading={ this.startLoading } stopLoading={ this.stopLoading } uniBalances={ uniBalances } />
+        <Delegatee key={ delegatee.address } delegatee={ delegatee } startLoading={ this.startLoading } stopLoading={ this.stopLoading } uniBalances={ uniBalances } addressClicked={ this.addressClicked } account={ account } />
       )
     })
   };

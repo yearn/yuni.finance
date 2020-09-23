@@ -33,7 +33,10 @@ const styles = theme => ({
     flexDirection: 'column',
     flexWrap: 'wrap',
     boxShadow: 'rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px, rgba(0, 0, 0, 0.01) 0px 24px 32px',
-    maxWidth: '500px'
+    maxWidth: '500px',
+    [theme.breakpoints.down('sm')]: {
+      margin: '0px 6px'
+    }
   },
   delegateeInfo: {
     display: 'flex'
@@ -117,7 +120,8 @@ const styles = theme => ({
     position: 'absolute',
     top: '12px',
     left: '50%',
-    transform: 'translateX(-50%) translateY(0%)'
+    transform: 'translateX(-50%) translateY(0%)',
+    width: 'fit-content'
   },
   goals: {
     padding: '6px 0px',
@@ -179,7 +183,7 @@ class Delegatee extends Component {
   };
 
   render() {
-    const { classes, delegatee, uniBalances } = this.props;
+    const { classes, delegatee, uniBalances, account, addressClicked } = this.props;
     const { loading, signatureResponse } = this.state
 
     const percent = delegatee.totalDelegated/400000
@@ -212,14 +216,25 @@ class Delegatee extends Component {
           <Typography className={ classes.firstGoalText } variant={'h5'}>1st goal</Typography>
           <Typography className={ classes.secondGoalText } variant={'h5'}>2nd Goal</Typography>
           <div className={ classes.totalDelegations } style={{ width: percent+'%' }}></div>
-          <Typography className={ classes.percentText } variant={'h5'}> Total Delegated: { this._printNumber(delegatee.totalDelegated) } UNI - { percent.toFixed(0) }%</Typography>
+          <Typography className={ classes.percentText } variant={'h5'}>Delegated: { this._printNumber(delegatee.totalDelegated) } UNI - { percent.toFixed(0) }%</Typography>
         </div>
         <div className={ classes.description }>
           { alreadyDelegated && <Typography variant={ 'h5'} >You have already delegated to { delegatee.name }. Thanks for showing your support!</Typography> }
           { !alreadyDelegated && <Typography variant='h5'>You can delegate to { delegatee.name } { delegatee.surname } on-chain. By clicking the button below, you will be calling the uniswap contract found <a href={ 'https://etherscan.io/address/'+config.uniswapContractAddress+'#writeContract' } target='_blank' rel='noopener noreferrer'>here</a> delegate() function. This will delegate your UNI to { delegatee.name }'s <a href={'https://etherscan.io/address/'+delegatee.address} target='_blank'  rel='noopener noreferrer'>address</a>.</Typography> }
         </div>
         <div className={ classes.action }>
-          { !alreadyDelegated &&
+          { (!account || !account.address) &&
+            <Button
+              disabled={ loading }
+              onClick={ addressClicked }
+              fullWidth
+              className={ classes.uniButton }
+              variant='contained'
+              color='primary'>
+              <Typography className={ classes.buttonText } variant={ 'h5'} >Connect wallet</Typography>
+            </Button>
+          }
+          { !(!account || !account.address) && !alreadyDelegated &&
             <Button
               disabled={ loading }
               onClick={ this.onDelegate }
@@ -237,15 +252,28 @@ class Delegatee extends Component {
               <Typography variant='h5'>If you don't want to spend the gas fees, { delegatee.name } will submit the transaction on-chain on your behalf. By clicking the button below, you will be signing the transaction on the uniswap contract found <a href={ 'https://etherscan.io/address/'+config.uniswapContractAddress+'#writeContract' } target='_blank' rel='noopener noreferrer'>here</a> delegateBySig(). This will be sent to { delegatee.name } to submit on your behalf.</Typography>
             </div>
             <div className={ classes.action }>
-              <Button
-                disabled={ loading }
-                onClick={ this.onSign }
-                fullWidth
-                className={ classes.uniButton }
-                variant='contained'
-                color='primary'>
-                <Typography className={ classes.buttonText } variant={ 'h5'} >Sign delegateBySig transaction</Typography>
-              </Button>
+              { (!account || !account.address) &&
+                <Button
+                  disabled={ loading }
+                  onClick={ addressClicked }
+                  fullWidth
+                  className={ classes.uniButton }
+                  variant='contained'
+                  color='primary'>
+                  <Typography className={ classes.buttonText } variant={ 'h5'} >Connect wallet</Typography>
+                </Button>
+              }
+              { !(!account || !account.address) &&
+                <Button
+                  disabled={ loading }
+                  onClick={ this.onSign }
+                  fullWidth
+                  className={ classes.uniButton }
+                  variant='contained'
+                  color='primary'>
+                  <Typography className={ classes.buttonText } variant={ 'h5'} >Sign delegateBySig transaction</Typography>
+                </Button>
+              }
             </div>
           </React.Fragment>
         }

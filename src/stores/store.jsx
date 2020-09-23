@@ -263,7 +263,6 @@ class Store {
       expiry: expiry
     };
 
-    console.log(nonce)
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
@@ -278,6 +277,7 @@ class Store {
 
     const that = this
 
+
     web3.currentProvider.sendAsync(
       {
         method: "eth_signTypedData_v3",
@@ -286,7 +286,11 @@ class Store {
       },
       function(err, result) {
         if (err || result.error) {
-          return console.error(result);
+          console.error(err || result.error);
+          if(result && result.error && result.error.message) {
+            return callback(result.error.message)  
+          }
+          return callback(err || result.error)
         }
 
         const signature = that._parseSignature(result.result.substring(2));
@@ -334,8 +338,6 @@ class Store {
         })
     };
 
-    console.log(requestOpts)
-
     rp(requestOpts)
     .then(function(res) {
       try {
@@ -350,7 +352,7 @@ class Store {
       }
     })
     .catch(function(err) {
-        console.log(err);
+      return emitter.emit(ERROR, err)
     });
 
   }
