@@ -215,6 +215,32 @@ class Delegate extends Component {
     } = this.state
     const { classes } = this.props
 
+    if(!account || !account.address) {
+      return (
+        <div className={ classes.root }>
+          <div className={ classes.header }>
+            <img
+              className={ classes.icon }
+              alt="Logo"
+              src={ require('../../assets/uniswap-logo.svg') }
+              height={ '40px' }
+            />
+            <Typography variant='h3' className={ classes.title }>yuni.finance</Typography>
+            <div className={ classes.account }>
+              <Typography variant={ 'h4'} className={ classes.walletAddress } noWrap onClick={this.addressClicked} >
+                Connect your wallet
+              </Typography>
+            </div>
+          </div>
+          <div className={ classes.contentContainer }>
+            <Typography variant={'h5'} className={ classes.disclaimer }>This project is in beta. Use at your own risk.</Typography>
+            <Typography variant='h3'>Connect your wallet to continue</Typography>
+          </div>
+          { modalOpen && this.renderModal() }
+        </div>
+      )
+    }
+
     let address = null;
     if (account.address) {
       address = account.address.substring(0,6)+'...'+account.address.substring(account.address.length-4,account.address.length)
